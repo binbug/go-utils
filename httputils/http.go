@@ -14,26 +14,7 @@ import (
 // URL represents the URL of the request.
 // opts represents the optional configuration options.
 func Get[T any](URL string, opts ...Option) (httpResult HttpResult[T]) {
-	cfg := initConfig(opts...)
-	client := &http.Client{
-		Timeout: cfg.timeout,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, URL, nil)
-	if err != nil {
-		return HttpResult[T]{err: err}
-	}
-
-	if cfg.header != nil {
-		req.Header = cfg.header
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return HttpResult[T]{err: err}
-	}
-
-	return processResponse[T](resp, cfg)
+	return execute[T](URL, http.MethodGet, nil, opts...)
 }
 
 // PostForm function is used to send an HTTP POST request with form data.
@@ -61,14 +42,24 @@ func PostJSON[T any](URL string, o interface{}, opts ...Option) (httpResult Http
 // body represents the request body.
 // opts represents the optional configuration options.
 func Post[T any](URL string, contentType string, body io.Reader, opts ...Option) (httpResult HttpResult[T]) {
-	cfg := initConfig(opts...)
+	opts = append(opts, withReqInterceptor(func(req *http.Request) {
+		req.Header.Set("Content-Type", contentType)
+	}))
 
+	return execute[T](URL, http.MethodPost, body, opts...)
+}
+
+func Delete[T any](URL string, opts ...Option) HttpResult[T] {
+	return execute[T](URL, http.MethodDelete, nil, opts...)
+}
+
+func execute[T any](URL, method string, body io.Reader, opts ...Option) HttpResult[T] {
+	cfg := initConfig(opts...)
 	client := &http.Client{
 		Timeout: cfg.timeout,
 	}
 
-	req, err := http.NewRequest("POST", URL, body)
-
+	req, err := http.NewRequest(method, URL, body)
 	if err != nil {
 		return HttpResult[T]{err: err}
 	}
@@ -77,7 +68,9 @@ func Post[T any](URL string, contentType string, body io.Reader, opts ...Option)
 		req.Header = cfg.header
 	}
 
-	req.Header.Set("Content-Type", contentType)
+	if cfg.reqInterceptor != nil {
+		cfg.reqInterceptor(req)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -85,6 +78,7 @@ func Post[T any](URL string, contentType string, body io.Reader, opts ...Option)
 	}
 
 	return processResponse[T](resp, cfg)
+
 }
 
 // initConfig function is used to initialize the configuration for an HTTP request.
@@ -104,7 +98,6 @@ func initConfig(opts ...Option) *Config {
 // cfg represents the configuration options for the HTTP request.
 // Returns an HttpResult struct containing the processed response.
 func processResponse[T any](resp *http.Response, cfg *Config) (httpResult HttpResult[T]) {
-
 	httpResult = HttpResult[T]{
 		statusCode: resp.StatusCode,
 	}
@@ -125,6 +118,7 @@ func processResponse[T any](resp *http.Response, cfg *Config) (httpResult HttpRe
 	case *struct{}:
 		httpResult.o = any(&struct{}{}).(T)
 	}
+
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
@@ -139,7 +133,7 @@ func processResponse[T any](resp *http.Response, cfg *Config) (httpResult HttpRe
 
 	httpResult.statusCode = resp.StatusCode
 	httpResult.header = resp.Header
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		httpResult.err = errors.New(string(data))
 		return httpResult
 	}

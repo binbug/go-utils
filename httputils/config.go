@@ -11,6 +11,8 @@ type Config struct {
 	header http.Header
 
 	rawBody bool
+
+	reqInterceptor func(req *http.Request)
 }
 
 type Option func(*Config)
@@ -30,5 +32,11 @@ func WithHeader(header http.Header) Option {
 func WithRawBody() Option {
 	return func(c *Config) {
 		c.rawBody = true
+	}
+}
+
+func withReqInterceptor(fn func(req *http.Request)) Option {
+	return func(c *Config) {
+		c.reqInterceptor = fn
 	}
 }
