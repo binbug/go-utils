@@ -29,3 +29,7 @@ func (r HttpResult[T]) ToObject() T {
 func (r HttpResult[T]) RawBody() []byte {
 	return r.rawBody
 }
+
+func (r HttpResult[T]) RawBodyString() string {
+	return string(r.rawBody)
+}
