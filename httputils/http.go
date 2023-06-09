@@ -133,7 +133,13 @@ func processResponse[T any](resp *http.Response, cfg *Config) (httpResult HttpRe
 
 	httpResult.statusCode = resp.StatusCode
 	httpResult.header = resp.Header
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+	if len(cfg.deserializeCode) > 0 {
+		_, ok := cfg.deserializeCode[resp.StatusCode]
+		if !ok {
+			httpResult.err = errors.New(string(data))
+			return httpResult
+		}
+	} else if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		httpResult.err = errors.New(string(data))
 		return httpResult
 	}

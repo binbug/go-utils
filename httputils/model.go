@@ -1,6 +1,9 @@
 package httputils
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type HttpResult[T any] struct {
 	err        error
@@ -32,4 +35,8 @@ func (r HttpResult[T]) RawBody() []byte {
 
 func (r HttpResult[T]) RawBodyString() string {
 	return string(r.rawBody)
+}
+
+func (r HttpResult[T]) String() string {
+	return fmt.Sprintf("err: %v, statusCode: %d, rawBody: %s, o: %v", r.err, r.statusCode, r.rawBody, r.o)
 }

@@ -13,6 +13,8 @@ type Config struct {
 	rawBody bool
 
 	reqInterceptor func(req *http.Request)
+
+	deserializeCode map[int]struct{}
 }
 
 type Option func(*Config)
@@ -32,6 +34,18 @@ func WithHeader(header http.Header) Option {
 func WithRawBody() Option {
 	return func(c *Config) {
 		c.rawBody = true
+	}
+}
+
+func DeserializeCode(codes ...int) Option {
+	return func(c *Config) {
+		if c.deserializeCode == nil {
+			c.deserializeCode = make(map[int]struct{})
+		}
+
+		for _, code := range codes {
+			c.deserializeCode[code] = struct{}{}
+		}
 	}
 }
 

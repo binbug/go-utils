@@ -1,6 +1,8 @@
 package httputils
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -79,4 +81,12 @@ func Test_PostJSON(t *testing.T) {
 	}
 
 	t.Log(httpResult.ToObject())
+}
+
+func TestModel(t *testing.T) {
+	httpResult := HttpResult[string]{
+		err: errors.New("hhh"),
+	}
+
+	fmt.Println(httpResult)
 }
