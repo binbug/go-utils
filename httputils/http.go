@@ -56,7 +56,8 @@ func Delete[T any](URL string, opts ...Option) HttpResult[T] {
 func execute[T any](URL, method string, body io.Reader, opts ...Option) HttpResult[T] {
 	cfg := initConfig(opts...)
 	client := &http.Client{
-		Timeout: cfg.timeout,
+		Timeout:       cfg.timeout,
+		CheckRedirect: cfg.checkRedirect,
 	}
 
 	req, err := http.NewRequest(method, URL, body)

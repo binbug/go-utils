@@ -15,6 +15,8 @@ type Config struct {
 	reqInterceptor func(req *http.Request)
 
 	deserializeCode map[int]struct{}
+
+	checkRedirect func(req *http.Request, via []*http.Request) error
 }
 
 type Option func(*Config)
@@ -22,6 +24,12 @@ type Option func(*Config)
 func WithTimeout(timeout time.Duration) Option {
 	return func(c *Config) {
 		c.timeout = timeout
+	}
+}
+
+func WithCheckRedirect(fn func(req *http.Request, via []*http.Request) error) Option {
+	return func(c *Config) {
+		c.checkRedirect = fn
 	}
 }
 
