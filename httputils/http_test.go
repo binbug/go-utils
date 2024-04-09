@@ -9,7 +9,9 @@ import (
 )
 
 func Test_GetThenReturnResponse(t *testing.T) {
-	httpResult := Get[http.Response]("https://jsonplaceholder.typicode.com/posts/1")
+	httpResult := Get[http.Response]("https://jsonplaceholder.typicode.com/posts/1", withReqInterceptor(func(req *http.Request) {
+		t.Logf("request header:%+v", req.Header)
+	}))
 
 	if httpResult.Err() != nil {
 		t.Error(httpResult.Err())

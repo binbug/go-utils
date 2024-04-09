@@ -12,7 +12,7 @@ type Config struct {
 
 	rawBody bool
 
-	reqInterceptor func(req *http.Request)
+	reqInterceptors []func(req *http.Request)
 
 	deserializeCode map[int]struct{}
 
@@ -59,6 +59,10 @@ func DeserializeCode(codes ...int) Option {
 
 func withReqInterceptor(fn func(req *http.Request)) Option {
 	return func(c *Config) {
-		c.reqInterceptor = fn
+		if c.reqInterceptors == nil {
+			c.reqInterceptors = make([]func(req *http.Request), 0)
+		}
+		c.reqInterceptors = append(c.reqInterceptors, fn)
+		// c.reqInterceptor = fn
 	}
 }

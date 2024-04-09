@@ -2,11 +2,12 @@ package httputils
 
 import (
 	"errors"
-	"github.com/binbug/go-utils/jsonutils"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/binbug/go-utils/jsonutils"
 )
 
 // Get function is used to send an HTTP GET request.
@@ -49,10 +50,27 @@ func Post[T any](URL string, contentType string, body io.Reader, opts ...Option)
 	return execute[T](URL, http.MethodPost, body, opts...)
 }
 
+// Delete is a function that sends an HTTP DELETE request to the specified URL.
+//
+// Parameters:
+//
+//	URL string - the URL to send the DELETE request to.
+//	opts ...Option - optional options for the HTTP request.
+//
+// Return:
+//
+//	HttpResult[T] - the result of the HTTP request.
 func Delete[T any](URL string, opts ...Option) HttpResult[T] {
 	return execute[T](URL, http.MethodDelete, nil, opts...)
 }
 
+// execute is a function that sends an HTTP request based on the provided URL, method, body, and options.
+//
+// URL: the URL to send the HTTP request to.
+// method: the HTTP method to use for the request.
+// body: the request body.
+// opts: optional configurations for the request.
+// Returns an HttpResult containing the result of the HTTP request.
 func execute[T any](URL, method string, body io.Reader, opts ...Option) HttpResult[T] {
 	cfg := initConfig(opts...)
 	client := &http.Client{
@@ -69,8 +87,8 @@ func execute[T any](URL, method string, body io.Reader, opts ...Option) HttpResu
 		req.Header = cfg.header
 	}
 
-	if cfg.reqInterceptor != nil {
-		cfg.reqInterceptor(req)
+	for _, interceptor := range cfg.reqInterceptors {
+		interceptor(req)
 	}
 
 	resp, err := client.Do(req)
