@@ -19,5 +19,3 @@ httpResult :=  httputil.PostForm[string]("http://www.example.com", form)
 ```
 
 2. json工具类
-
-3. 运行时工具类
